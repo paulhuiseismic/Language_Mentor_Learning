@@ -1,10 +1,12 @@
 import gradio as gr
 from agents.conversation_agent import ConversationAgent
 from agents.hotel_checkin_agent import HotelCheckInAgent
+from agents.job_interview_agent import JobInterviewAgent
 from utils.logger import LOG
 
 conversation_agent = ConversationAgent()
 hotel_checkin_agent = HotelCheckInAgent()
+job_interview_agent = JobInterviewAgent()
 
 def handle_conversation(user_input, chat_history):
     LOG.debug(f"[聊天记录]: {chat_history}")
@@ -21,6 +23,7 @@ def get_scenario_intro(scenario):
 def handle_scenario(user_input, chat_history, scenario):
     agents = {
         "hotel_checkin": hotel_checkin_agent,
+        "job_interview": job_interview_agent,
     }
     bot_message = agents[scenario].chat_with_history(user_input)
     LOG.info(f"[{scenario} ChatBot]: {bot_message}")
