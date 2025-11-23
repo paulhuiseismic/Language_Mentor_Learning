@@ -1,8 +1,10 @@
 import gradio as gr
 from agents.conversation_agent import ConversationAgent
+from agents.hotel_checkin_agent import HotelCheckInAgent
 from utils.logger import LOG
 
 conversation_agent = ConversationAgent()
+hotel_checkin_agent = HotelCheckInAgent()
 
 def handle_conversation(user_input, chat_history):
     LOG.debug(f"[聊天记录]: {chat_history}")
@@ -10,12 +12,19 @@ def handle_conversation(user_input, chat_history):
     LOG.info(f"[ChatBot]: {bot_message}")
     return bot_message
 
+def get_scenario_intro(scenario):
+    with open(f"content/{scenario}_page.md", "r", encoding="utf-8") as file:
+        scenario_intro = file.read().strip()
+    return scenario_intro
 
-def handle_scenario(user_input, history, scenario):
+
+def handle_scenario(user_input, chat_history, scenario):
     agents = {
-
+        "hotel_checkin": hotel_checkin_agent,
     }
-    return agents[scenario].respond(user_input)
+    bot_message = agents[scenario].chat_with_history(user_input)
+    LOG.info(f"[{scenario} ChatBot]: {bot_message}")
+    return bot_message
 
 
 with gr.Blocks(title="LanguageMentor 英语私教") as language_mentor_app:
@@ -37,7 +46,19 @@ with gr.Blocks(title="LanguageMentor 英语私教") as language_mentor_app:
 
     with gr.Tab("场景训练"):
         gr.Markdown("## 选择一个场景学习并完成任务")
-        scenario_dropdown = gr.Dropdown(choices=["求职面试", "酒店入住", "薪资谈判", "租房"], label="选择场景")
+        scenario = gr.Radio(
+            choices=[
+                ("酒店入住", "hotel_checkin"),
+                ("求职面试", "job_interview"),
+                ("薪资谈判", "salary_negotiation"),
+                ("租房", "renting"),
+            ],
+            label="场景"
+        )
+        scenario_intro = gr.Markdown()
+
+        scenario.change(fn=get_scenario_intro, inputs=scenario, outputs=scenario_intro)
+
         scenario_chatbot = gr.Chatbot(
             placeholder="<strong>您的英语私教 Paul</strong><br><br>选择场景后开始对话吧！",
             height=600,
@@ -46,7 +67,7 @@ with gr.Blocks(title="LanguageMentor 英语私教") as language_mentor_app:
         gr.ChatInterface(
             fn=handle_scenario,
             chatbot=scenario_chatbot,
-            additional_inputs=scenario_dropdown,
+            additional_inputs=scenario,
             retry_btn=None,
             undo_btn=None,
             clear_btn="清除历史记录",
