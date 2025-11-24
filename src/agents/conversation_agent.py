@@ -1,70 +1,17 @@
+from langchain_core.messages import AIMessage
 
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import HumanMessage
+from agents.session_history import get_session_history
+from agents.agent_base import AgentBase
 from utils.logger import LOG
-from azure_openai import chat_model
 
-from langchain_core.chat_history import (
-    BaseChatMessageHistory,
-    InMemoryChatMessageHistory
-)
-from langchain_core.runnables.history import RunnableWithMessageHistory
 
-store = {}
-
-def get_session_history(session_id: str) -> BaseChatMessageHistory:
-    """
-    get or create session history
-    :param session_id:
-    :return: BaseChatMessageHistory
-    """
-    if session_id not in store:
-        store[session_id] = InMemoryChatMessageHistory()
-    return store[session_id]
-
-class ConversationAgent:
+class ConversationAgent(AgentBase):
     """
     Conversation Agent with history
     """
-    def __init__(self):
-        self.name = "Conversation Agent"
-
-        with open("prompts/conversation_prompt.txt", "r", encoding="utf-8") as file:
-            self.system_prompt = file.read().strip()
-
-        self.prompt = ChatPromptTemplate.from_messages([
-            ("system", self.system_prompt),
-            MessagesPlaceholder(variable_name="messages"),
-        ])
-
-        self.chatbot = self.prompt | chat_model
-
-        self.chatbot_with_history = RunnableWithMessageHistory(self.chatbot, get_session_history)
-
-        self.config = {"configurable": {"session_id": "abc123"}}
-
-
-    def chat(self, user_input: str) -> str:
-        """
-        chat with user input
-        :param user_input:
-        :return: response content
-        """
-        response = self.chatbot.invoke(
-            [HumanMessage(content=user_input)],
+    def __init__(self, session_id=None):
+        super().__init__(
+            name="conversation",
+            prompt_file="../prompts/conversation_prompt.txt",
+            session_id=session_id
         )
-        return response.content
-
-
-    def chat_with_history(self, user_input: str) -> str:
-        """
-        chat with user input and history
-        :param user_input:
-        :return: response content
-        """
-        response = self.chatbot_with_history.invoke(
-            [HumanMessage(content=user_input)],
-            self.config
-        )
-        LOG.debug(response)
-        return response.content
