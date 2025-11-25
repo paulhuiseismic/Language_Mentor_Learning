@@ -1,0 +1,131 @@
+# Azure DevOps Pipeline for Language Mentor
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  tags:
+    include:
+      - v*
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: dockerRegistryServiceConnection
+    value: 'DockerRegistry'
+  - name: imageRepository
+    value: 'language-mentor'
+  - name: containerRegistry
+    value: 'your-registry.azurecr.io'
+  - name: dockerfilePath
+    value: '$(Build.SourcesDirectory)/Dockerfile'
+  - name: tag
+    value: '$(Build.BuildId)'
+  - name: pythonVersion
+    value: '3.12'
+
+stages:
+  - stage: Test
+    displayName: 'Run Tests'
+    jobs:
+      - job: UnitTests
+        displayName: 'Unit Tests'
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: $(pythonVersion)
+            displayName: 'Use Python $(pythonVersion)'
+
+          - script: |
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt
+            displayName: 'Install dependencies'
+
+          - script: |
+              python -m pytest src/tests/ -v --cov=src --cov-report=xml --cov-report=html --junitxml=junit/test-results.xml
+            displayName: 'Run pytest'
+
+          - task: PublishTestResults@2
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFiles: '**/test-*.xml'
+              testRunTitle: 'Python $(pythonVersion)'
+            displayName: 'Publish test results'
+
+          - task: PublishCodeCoverageResults@1
+            inputs:
+              codeCoverageTool: Cobertura
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+              reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+            displayName: 'Publish coverage results'
+
+  - stage: Build
+    displayName: 'Build Docker Image'
+    dependsOn: Test
+    condition: succeeded()
+    jobs:
+      - job: BuildImage
+        displayName: 'Build and Push Docker Image'
+        steps:
+          - task: Docker@2
+            displayName: 'Build Docker image'
+            inputs:
+              command: build
+              repository: $(imageRepository)
+              dockerfile: $(dockerfilePath)
+              containerRegistry: $(dockerRegistryServiceConnection)
+              tags: |
+                $(tag)
+                latest
+
+          - task: Docker@2
+            displayName: 'Push Docker image'
+            inputs:
+              command: push
+              repository: $(imageRepository)
+              containerRegistry: $(dockerRegistryServiceConnection)
+              tags: |
+                $(tag)
+                latest
+
+          - task: AzureCLI@2
+            displayName: 'Scan image for vulnerabilities'
+            inputs:
+              azureSubscription: 'Azure Subscription'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                # Install Trivy
+                wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+                echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+                sudo apt-get update
+                sudo apt-get install trivy
+                
+                # Scan the image
+                trivy image --severity HIGH,CRITICAL $(containerRegistry)/$(imageRepository):$(tag)
+
+  - stage: Deploy
+    displayName: 'Deploy to Environment'
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployProduction
+        displayName: 'Deploy to Production'
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: |
+                    echo "Deploying $(imageRepository):$(tag) to production"
+                    # Add your deployment commands here
+                  displayName: 'Deploy application'
+

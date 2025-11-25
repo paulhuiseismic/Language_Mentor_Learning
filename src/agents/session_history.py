@@ -2,7 +2,6 @@ from langchain_core.chat_history import (
     BaseChatMessageHistory,
     InMemoryChatMessageHistory
 )
-from langchain_core.runnables.history import RunnableWithMessageHistory
 
 store = {}
 

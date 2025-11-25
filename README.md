@@ -27,15 +27,39 @@ Language_Mentor_Learning/
 │   ├── main.py                      # Main application entry point
 │   ├── azure_openai.py              # Azure OpenAI configuration
 │   ├── agents/
-│   │   └── conversation_agent.py    # Conversation agent with history
-│   └── utils/
-│       └── logger.py                # Logging utility
+│   │   ├── agent_base.py            # Base agent class
+│   │   ├── conversation_agent.py    # Conversation agent with history
+│   │   ├── scenario_agent.py        # Scenario-based training agent
+│   │   ├── vocab_agent.py           # Vocabulary learning agent
+│   │   └── session_history.py       # Session management
+│   ├── tabs/
+│   │   ├── conversation_tab.py      # Conversation practice UI
+│   │   ├── scenario_tab.py          # Scenario training UI
+│   │   └── vocab_tab.py             # Vocabulary study UI
+│   ├── utils/
+│   │   └── logger.py                # Logging utility
+│   └── tests/
+│       ├── conftest.py              # Pytest configuration
+│       ├── test_agent_base.py       # Agent base tests
+│       ├── test_scenario_agent.py   # Scenario agent tests
+│       ├── test_conversation_agent.py # Conversation agent tests
+│       ├── test_vocab_agent.py      # Vocab agent tests
+│       ├── test_session_history.py  # Session management tests
+│       ├── test_integration.py      # Integration tests
+│       └── README.md                # Test documentation
 ├── prompts/
-│   └── conversation_prompt.txt      # System prompt for the AI tutor
+│   ├── conversation_prompt.txt      # Conversation agent prompt
+│   ├── vocab_study_prompt.txt       # Vocabulary agent prompt
+│   └── *_prompt.txt                 # Scenario-specific prompts
+├── content/
+│   ├── intro/                       # Scenario introduction messages
+│   └── page/                        # Scenario descriptions
 ├── logs/
 │   └── app.log                      # Application logs
 ├── images/                          # Image assets
 ├── requirements.txt                 # Python dependencies
+├── pytest.ini                       # Pytest configuration
+├── TEST_SUMMARY.md                  # Test suite summary
 └── README.md                        # This file
 ```
 
@@ -70,6 +94,8 @@ Language_Mentor_Learning/
 
 ### Running the Application
 
+#### Option 1: Local Python Environment
+
 1. **Start the application**:
    ```bash
    cd src
@@ -80,6 +106,35 @@ Language_Mentor_Learning/
    - The Gradio interface will launch automatically
    - Open your browser to the provided URL (typically `http://localhost:7860`)
    - The app will also create a public share link if `share=True`
+
+#### Option 2: Docker Container (Recommended for Production)
+
+1. **Quick start with Docker Compose**:
+   ```bash
+   # Copy environment file and configure
+   cp .env.example .env
+   # Edit .env with your Azure OpenAI credentials
+   
+   # Start the application
+   docker-compose up -d
+   
+   # View logs
+   docker-compose logs -f
+   ```
+
+2. **Or build and run with Docker**:
+   ```bash
+   # Build the image
+   docker build -t language-mentor:latest .
+   
+   # Run the container
+   docker run -d -p 7860:7860 --env-file .env language-mentor:latest
+   ```
+
+3. **Access the application**:
+   - Open browser to `http://localhost:7860`
+
+For detailed Docker deployment instructions, see [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)
 
 ## 🎯 How to Use
 
