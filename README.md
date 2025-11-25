@@ -27,15 +27,39 @@ Language_Mentor_Learning/
 │   ├── main.py                      # Main application entry point
 │   ├── azure_openai.py              # Azure OpenAI configuration
 │   ├── agents/
-│   │   └── conversation_agent.py    # Conversation agent with history
-│   └── utils/
-│       └── logger.py                # Logging utility
+│   │   ├── agent_base.py            # Base agent class
+│   │   ├── conversation_agent.py    # Conversation agent with history
+│   │   ├── scenario_agent.py        # Scenario-based training agent
+│   │   ├── vocab_agent.py           # Vocabulary learning agent
+│   │   └── session_history.py       # Session management
+│   ├── tabs/
+│   │   ├── conversation_tab.py      # Conversation practice UI
+│   │   ├── scenario_tab.py          # Scenario training UI
+│   │   └── vocab_tab.py             # Vocabulary study UI
+│   ├── utils/
+│   │   └── logger.py                # Logging utility
+│   └── tests/
+│       ├── conftest.py              # Pytest configuration
+│       ├── test_agent_base.py       # Agent base tests
+│       ├── test_scenario_agent.py   # Scenario agent tests
+│       ├── test_conversation_agent.py # Conversation agent tests
+│       ├── test_vocab_agent.py      # Vocab agent tests
+│       ├── test_session_history.py  # Session management tests
+│       ├── test_integration.py      # Integration tests
+│       └── README.md                # Test documentation
 ├── prompts/
-│   └── conversation_prompt.txt      # System prompt for the AI tutor
+│   ├── conversation_prompt.txt      # Conversation agent prompt
+│   ├── vocab_study_prompt.txt       # Vocabulary agent prompt
+│   └── *_prompt.txt                 # Scenario-specific prompts
+├── content/
+│   ├── intro/                       # Scenario introduction messages
+│   └── page/                        # Scenario descriptions
 ├── logs/
 │   └── app.log                      # Application logs
 ├── images/                          # Image assets
 ├── requirements.txt                 # Python dependencies
+├── pytest.ini                       # Pytest configuration
+├── TEST_SUMMARY.md                  # Test suite summary
 └── README.md                        # This file
 ```
 
