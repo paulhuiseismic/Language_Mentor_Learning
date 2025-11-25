@@ -94,6 +94,8 @@ Language_Mentor_Learning/
 
 ### Running the Application
 
+#### Option 1: Local Python Environment
+
 1. **Start the application**:
    ```bash
    cd src
@@ -104,6 +106,35 @@ Language_Mentor_Learning/
    - The Gradio interface will launch automatically
    - Open your browser to the provided URL (typically `http://localhost:7860`)
    - The app will also create a public share link if `share=True`
+
+#### Option 2: Docker Container (Recommended for Production)
+
+1. **Quick start with Docker Compose**:
+   ```bash
+   # Copy environment file and configure
+   cp .env.example .env
+   # Edit .env with your Azure OpenAI credentials
+   
+   # Start the application
+   docker-compose up -d
+   
+   # View logs
+   docker-compose logs -f
+   ```
+
+2. **Or build and run with Docker**:
+   ```bash
+   # Build the image
+   docker build -t language-mentor:latest .
+   
+   # Run the container
+   docker run -d -p 7860:7860 --env-file .env language-mentor:latest
+   ```
+
+3. **Access the application**:
+   - Open browser to `http://localhost:7860`
+
+For detailed Docker deployment instructions, see [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)
 
 ## 🎯 How to Use
 

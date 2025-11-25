@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  language-mentor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: language-mentor:latest
+    container_name: language-mentor-app
+    restart: unless-stopped
+
+    ports:
+      - "7860:7860"
+
+    environment:
+      # Azure OpenAI Configuration
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_API_VERSION=${AZURE_API_VERSION:-2024-02-15-preview}
+      - AZURE_MODEL=${AZURE_MODEL:-gpt-4}
+
+      # Application Configuration
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - GRADIO_SERVER_PORT=7860
+      - PYTHONUNBUFFERED=1
+
+    volumes:
+      # Mount logs directory for persistence
+      - ./logs:/app/logs
+      # Optional: Mount prompts for easy updates
+      - ./prompts:/app/prompts:ro
+      - ./content:/app/content:ro
+
+    networks:
+      - language-mentor-network
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    # Resource limits (adjust based on your needs)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+networks:
+  language-mentor-network:
+    driver: bridge
+
+volumes:
+  language-mentor-logs:
+
